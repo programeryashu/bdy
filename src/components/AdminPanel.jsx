@@ -163,6 +163,57 @@ export default function AdminPanel() {
                     </div>
                   </section>
 
+                  {/* Prank Section */}
+                  <section>
+                    <h3 className="text-xs uppercase tracking-widest text-[var(--color-blush)] mb-4">😈 Prank Settings</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Enable Prank</span>
+                        <button 
+                          className={`w-12 h-6 rounded-full transition-colors ${form.showPrank ? 'bg-rose-500' : 'bg-white/10'}`}
+                          onClick={() => setForm(prev => ({ ...prev, showPrank: !prev.showPrank }))}
+                        >
+                          <div className={`w-4 h-4 bg-white rounded-full transition-transform ${form.showPrank ? 'translate-x-7' : 'translate-x-1'}`} />
+                        </button>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-white/60 mb-1 ml-1">Prank Intensity</label>
+                        <select 
+                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 outline-none focus:border-[var(--color-rose)]"
+                          value={form.prankIntensity}
+                          onChange={e => setForm(prev => ({ ...prev, prankIntensity: e.target.value }))}
+                        >
+                          <option value="low" className="bg-[#1a0a2e]">Low (Mild Shaking)</option>
+                          <option value="high" className="bg-[#1a0a2e]">High (Maximum Glitch)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Multimedia Section */}
+                  <section>
+                    <h3 className="text-xs uppercase tracking-widest text-[var(--color-blush)] mb-4">🎵 Multimedia</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs text-white/60 mb-1 ml-1">Custom Music URL (Direct Link)</label>
+                        <input 
+                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 outline-none focus:border-[var(--color-rose)] transition-colors"
+                          value={form.musicUrl}
+                          onChange={e => setForm(prev => ({ ...prev, musicUrl: e.target.value }))}
+                          placeholder="https://example.com/song.mp3"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-white/60 mb-1 ml-1">Game Secret Message (Unlocked at Score 20)</label>
+                        <input 
+                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 outline-none focus:border-[var(--color-rose)] transition-colors"
+                          value={form.secretMessage}
+                          onChange={e => setForm(prev => ({ ...prev, secretMessage: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </section>
+
                   {/* Security Section */}
                   <section>
                     <h3 className="text-xs uppercase tracking-widest text-[var(--color-blush)] mb-4">🔒 Security</h3>

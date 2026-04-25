@@ -10,6 +10,11 @@ const DEFAULTS = {
   finalMsg: `You deserve all the happiness in the world today and every day. No matter how far, you'll always have a friend cheering for you. Happy birthday, truly 🎂🤍`,
   theme: '',
   adminPw: '',
+  showPrank: true,
+  prankIntensity: 'high',
+  photos: [],
+  musicUrl: '',
+  secretMessage: 'You are truly special. Wishing you happiness always ❤️',
 }
 
 function loadLocalState() {

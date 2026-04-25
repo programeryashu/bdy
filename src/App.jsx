@@ -11,9 +11,11 @@ import CakeScreen from './components/CakeScreen'
 import BalloonScreen from './components/BalloonScreen'
 import MeterScreen from './components/MeterScreen'
 import FinalScreen from './components/FinalScreen'
+import PrankScreen from './components/PrankScreen'
 
 const SCREENS = [
   'landing',
+  'prank',
   'curiosity',
   'letter',
   'cake',
@@ -38,7 +40,14 @@ function BirthdayApp() {
     }
   }, [config.theme, currentScreen])
 
-  const next = () => setCurrentScreen(prev => Math.min(prev + 1, SCREENS.length - 1))
+  const next = () => {
+    let nextIdx = currentScreen + 1
+    // Skip prank if disabled
+    if (SCREENS[nextIdx] === 'prank' && !config.showPrank) {
+      nextIdx++
+    }
+    setCurrentScreen(Math.min(nextIdx, SCREENS.length - 1))
+  }
   const restart = () => {
     setCurrentScreen(0)
     window.scrollTo(0, 0)
@@ -78,21 +87,24 @@ function BirthdayApp() {
           <LandingScreen key="landing" onComplete={next} />
         )}
         {currentScreen === 1 && (
-          <CuriosityScreen key="curiosity" onComplete={next} />
+          <PrankScreen key="prank" onComplete={next} />
         )}
         {currentScreen === 2 && (
-          <LetterScreen key="letter" onComplete={next} />
+          <CuriosityScreen key="curiosity" onComplete={next} />
         )}
         {currentScreen === 3 && (
-          <CakeScreen key="cake" onComplete={next} />
+          <LetterScreen key="letter" onComplete={next} />
         )}
         {currentScreen === 4 && (
-          <BalloonScreen key="balloons" onComplete={next} />
+          <CakeScreen key="cake" onComplete={next} />
         )}
         {currentScreen === 5 && (
-          <MeterScreen key="meter" onComplete={next} />
+          <BalloonScreen key="balloons" onComplete={next} />
         )}
         {currentScreen === 6 && (
+          <MeterScreen key="meter" onComplete={next} />
+        )}
+        {currentScreen === 7 && (
           <FinalScreen key="final" onRestart={restart} />
         )}
       </AnimatePresence>
