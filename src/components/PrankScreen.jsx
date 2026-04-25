@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useAnimation } from 'framer-motion'
-import { useStore } from '../store'
+import { useStore } from '../useStore'
 
 const SYSTEM_LOGS = [
   "INITIALIZING BOOT SEQUENCE...",
@@ -25,33 +25,53 @@ export default function PrankScreen({ onComplete }) {
   const [actionIndex, setActionIndex] = useState(-1)
   const [progress, setProgress] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
-  const [ipAddress, setIpAddress] = useState('192.168.1.1')
+  const [ipAddress] = useState(() => {
+    const r = () => Math.floor(Math.random() * 255)
+    return `${r()}.${r()}.${r()}.${r()}`
+  })
   const [time, setTime] = useState(new Date().toLocaleTimeString())
   const controls = useAnimation()
   const terminalRef = useRef(null)
+  const audioCtxRef = useRef(null)
+  const isMutedRef = useRef(isMuted)
 
-  // System Clock & Random IP
+  useEffect(() => {
+    isMutedRef.current = isMuted
+  }, [isMuted])
+
+  // System Clock
   useEffect(() => {
     const t = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000)
-    setIpAddress(`${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`)
-    return () => clearInterval(t)
+
+    return () => {
+      clearInterval(t)
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close()
+      }
+    }
   }, [])
 
-  const playBeep = (freq = 440, duration = 0.1) => {
-    if (isMuted) return
+  const playBeep = useCallback((freq = 440, duration = 0.1) => {
+    if (isMutedRef.current) return
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-      const osc = audioCtx.createOscillator()
-      const gain = audioCtx.createGain()
-      osc.connect(gain)
-      gain.connect(audioCtx.destination)
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)()
+      }
+      const ctx = audioCtxRef.current
+      if (ctx.state === 'suspended') ctx.resume()
+      
+      const osc = ctx.createOscillator()
+      const g = ctx.createGain()
+      osc.connect(g)
+      g.connect(ctx.destination)
       osc.type = 'square'
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime)
-      gain.gain.setValueAtTime(0.05, audioCtx.currentTime)
+      osc.frequency.setValueAtTime(freq, ctx.currentTime)
+      g.gain.setValueAtTime(0.05, ctx.currentTime)
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
       osc.start()
-      osc.stop(audioCtx.currentTime + duration)
-    } catch (e) {}
-  }
+      osc.stop(ctx.currentTime + duration)
+    } catch (e) { console.error(e) }
+  }, [])
 
   // Main Sequence
   useEffect(() => {
@@ -70,7 +90,7 @@ export default function PrankScreen({ onComplete }) {
       for (let i = 0; i < ACTIONS.length; i++) {
         await new Promise(r => setTimeout(r, 1000 + Math.random() * 500))
         setActionIndex(i)
-        playBeep(actionIndex % 2 === 0 ? 880 : 440, 0.1)
+        playBeep(i % 2 === 0 ? 880 : 440, 0.1)
       }
 
       await new Promise(r => setTimeout(r, 1200))
@@ -109,7 +129,7 @@ export default function PrankScreen({ onComplete }) {
     }
 
     sequence()
-  }, [])
+  }, [controls, playBeep])
 
   useEffect(() => {
     if (phase === 'reveal') {
@@ -289,23 +309,6 @@ export default function PrankScreen({ onComplete }) {
         </AnimatePresence>
       </div>
 
-      <style jsx>{`
-        .scanline {
-          width: 100%;
-          height: 100px;
-          z-index: 2003;
-          background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(0, 0, 0, 0) 100%);
-          opacity: 0.1;
-          position: absolute;
-          bottom: 100%;
-          animation: scanline 10s linear infinite;
-        }
-
-        @keyframes scanline {
-          0% { bottom: 100%; }
-          100% { bottom: -100px; }
-        }
-      `}</style>
     </motion.div>
   )
 }

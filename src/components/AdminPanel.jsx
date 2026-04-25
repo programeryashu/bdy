@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useStore } from '../store'
+import { useStore } from '../useStore'
 
 export default function AdminPanel() {
   const { config, update, reset, exportJSON, importJSON } = useStore()
@@ -11,11 +11,19 @@ export default function AdminPanel() {
 
   // Local form state
   const [form, setForm] = useState(config)
+  const [prevConfig, setPrevConfig] = useState(config)
 
-  useEffect(() => {
+  if (config !== prevConfig) {
+    setPrevConfig(config)
     setForm(config)
     setIsUnlocked(!config.adminPw)
-  }, [config])
+  }
+
+  // Sync body theme class with config theme
+  useEffect(() => {
+    const t = config.theme
+    document.body.className = t ? `theme-${t}` : ''
+  }, [config.theme])
 
   const handleOpen = () => setIsOpen(true)
   const handleClose = () => {
@@ -43,7 +51,6 @@ export default function AdminPanel() {
 
   const setTheme = (t) => {
     setForm(prev => ({ ...prev, theme: t }))
-    document.body.className = t ? `theme-${t}` : ''
   }
 
   return (

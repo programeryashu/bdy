@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useStore } from '../store'
+import { useStore } from '../useStore'
 
 const GRAD_THEMES = {
   '': ['#1a0a2e', '#3d0f5c', '#6a1a8a', '#3d0f5c'],
@@ -10,7 +10,12 @@ const GRAD_THEMES = {
 }
 
 class Particle {
-  constructor(W, H) { this.W = W; this.H = H; this.reset() }
+  constructor(W, H, theme = '') { 
+    this.W = W; 
+    this.H = H; 
+    this.theme = theme;
+    this.reset() 
+  }
   reset() {
     this.x = Math.random() * this.W
     this.y = Math.random() * this.H
@@ -18,7 +23,15 @@ class Particle {
     this.vx = (Math.random() - 0.5) * 0.3
     this.vy = -(Math.random() * 0.5 + 0.1)
     this.alpha = Math.random() * 0.8 + 0.2
-    this.color = `hsl(${Math.random() * 60 + 300}, 80%, ${Math.random() * 30 + 60}%)`
+    
+    // Theme-based colors
+    let hue = 320 // default pink/purple
+    if (this.theme === 'pink') hue = 340
+    if (this.theme === 'neon') hue = 160
+    if (this.theme === 'premium') hue = 45
+    if (this.theme === 'dark') hue = 260
+
+    this.color = `hsl(${hue + (Math.random() * 40 - 20)}, 80%, ${Math.random() * 30 + 60}%)`
     this.life = 0
     this.maxLife = 200 + Math.random() * 200
   }
@@ -49,7 +62,7 @@ export default function Background() {
     const ctx = canvas.getContext('2d')
     let W = canvas.width = window.innerWidth
     let H = canvas.height = window.innerHeight
-    const particles = Array.from({ length: 120 }, () => new Particle(W, H))
+    const particles = Array.from({ length: 120 }, () => new Particle(W, H, themeRef.current))
     let gradAngle = 0
     let animId
 
@@ -59,6 +72,16 @@ export default function Background() {
       particles.forEach(p => { p.W = W; p.H = H })
     }
     window.addEventListener('resize', onResize)
+
+    // Watch for theme changes and update particles
+    const themeWatcher = setInterval(() => {
+      if (particles[0].theme !== themeRef.current) {
+        particles.forEach(p => { 
+          p.theme = themeRef.current
+          p.reset() // Re-randomize with new color
+        })
+      }
+    }, 500)
 
     const animate = () => {
       animId = requestAnimationFrame(animate)
@@ -77,7 +100,11 @@ export default function Background() {
     }
     animate()
 
-    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', onResize) }
+    return () => { 
+      cancelAnimationFrame(animId)
+      window.removeEventListener('resize', onResize)
+      clearInterval(themeWatcher)
+    }
   }, [])
 
   return <canvas ref={canvasRef} id="bg-canvas" />

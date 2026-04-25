@@ -1,8 +1,20 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { useStore } from '../store'
+import { useStore } from '../useStore'
 
 export default function LandingScreen({ onComplete }) {
   const { config } = useStore()
+  const [emojis] = useState(() => ['🎈', '✨', '🎂', '🎈', '🎉'].map(emoji => ({
+    emoji,
+    duration: 2 + Math.random()
+  })))
+
+  const [particles] = useState(() => [...Array(15)].map((_, i) => ({
+    id: i,
+    x: Math.random() * 100 + '%',
+    duration: 5 + Math.random() * 5,
+    delay: Math.random() * 5
+  })))
 
   return (
     <div className="fixed inset-0 z-10 flex flex-col items-center justify-center p-6 text-center">
@@ -37,7 +49,7 @@ export default function LandingScreen({ onComplete }) {
           className="flex flex-col items-center space-y-6"
         >
           <div className="flex gap-4 text-4xl mb-4">
-            {['🎈', '✨', '🎂', '🎈', '🎉'].map((emoji, i) => (
+            {emojis.map((item, i) => (
               <motion.span
                 key={i}
                 animate={{ 
@@ -46,12 +58,12 @@ export default function LandingScreen({ onComplete }) {
                 }}
                 transition={{ 
                   delay: i * 0.1,
-                  duration: 2 + Math.random(),
+                  duration: item.duration,
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
               >
-                {emoji}
+                {item.emoji}
               </motion.span>
             ))}
           </div>
@@ -60,6 +72,7 @@ export default function LandingScreen({ onComplete }) {
             whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(255,255,255,0.4)' }}
             whileTap={{ scale: 0.95 }}
             onClick={onComplete}
+            aria-label="Open your birthday surprise"
             className="group relative px-8 py-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full overflow-hidden transition-all"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-rose-500/20 via-purple-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -72,12 +85,12 @@ export default function LandingScreen({ onComplete }) {
 
       {/* Floating particles background hint */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(15)].map((_, i) => (
+        {particles.map((p) => (
           <motion.div
-            key={i}
+            key={p.id}
             className="absolute w-1 h-1 bg-white rounded-full opacity-30"
             initial={{ 
-              x: Math.random() * 100 + '%', 
+              x: p.x, 
               y: '110%' 
             }}
             animate={{ 
@@ -85,9 +98,9 @@ export default function LandingScreen({ onComplete }) {
               opacity: [0, 0.3, 0]
             }}
             transition={{ 
-              duration: 5 + Math.random() * 5,
+              duration: p.duration,
               repeat: Infinity,
-              delay: Math.random() * 5
+              delay: p.delay
             }}
           />
         ))}

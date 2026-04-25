@@ -1,18 +1,18 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { useStore } from '../store'
+import { useStore } from '../useStore'
 import { triggerFireworks } from './Effects'
 
+const HEART_EMOJIS = ['💕', '🤍', '✨', '💗', '🫶', '💞', '🌸']
+
 function FloatingHearts() {
-  const emojis = ['💕', '🤍', '✨', '💗', '🫶', '💞', '🌸']
-  const hearts = useMemo(() =>
-    Array.from({ length: 12 }, (_, i) => ({
-      id: i,
-      emoji: emojis[Math.floor(Math.random() * emojis.length)],
-      left: `${Math.random() * 90}%`,
-      dur: `${3 + Math.random() * 3}s`,
-      del: `${Math.random() * 4}s`,
-    })), [])
+  const [hearts] = useState(() => Array.from({ length: 12 }, (_, i) => ({
+    id: i,
+    emoji: HEART_EMOJIS[Math.floor(Math.random() * HEART_EMOJIS.length)],
+    left: `${Math.random() * 90}%`,
+    dur: `${3 + Math.random() * 3}s`,
+    del: `${Math.random() * 4}s`,
+  })))
 
   return (
     <div className="absolute inset-0 overflow-hidden rounded-[32px] pointer-events-none">
@@ -37,19 +37,24 @@ export default function LetterScreen({ onComplete }) {
   const indexRef = useRef(0)
   const timerRef = useRef(null)
 
-  useEffect(() => {
-    const letter = config.letter
-    indexRef.current = 0
+  const [prevLetter, setPrevLetter] = useState(config.letter)
+
+  if (config.letter !== prevLetter) {
+    setPrevLetter(config.letter)
     setText('')
     setDone(false)
     setShowMade(false)
+  }
 
+  useEffect(() => {
+    indexRef.current = 0
+    const letter = config.letter
+    
     function typeNext() {
       if (indexRef.current >= letter.length) {
         setDone(true)
         triggerFireworks()
         setTimeout(() => setShowMade(true), 800)
-        setTimeout(() => onComplete(), 5000)
         return
       }
       indexRef.current++
@@ -60,7 +65,7 @@ export default function LetterScreen({ onComplete }) {
 
     timerRef.current = setTimeout(typeNext, 500)
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
-  }, [config.letter, onComplete])
+  }, [config.letter])
 
   return (
     <motion.div
@@ -101,6 +106,22 @@ export default function LetterScreen({ onComplete }) {
         >
           Made specially for you ❤️
         </motion.div>
+
+        {done && (
+          <motion.div 
+            className="mt-10 flex justify-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.5 }}
+          >
+            <button
+              onClick={onComplete}
+              className="bg-[var(--color-rose)] text-white px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-all"
+            >
+              Continue 💝
+            </button>
+          </motion.div>
+        )}
       </motion.div>
     </motion.div>
   )

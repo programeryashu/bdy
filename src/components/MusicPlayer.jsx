@@ -22,6 +22,8 @@ export default function MusicPlayer() {
     gainRef.current.connect(audioCtxRef.current.destination)
   }, [])
 
+  const playNoteRef = useRef()
+
   const playNote = useCallback((index = 0) => {
     if (!playingRef.current || !audioCtxRef.current) return
     const [freq, dur] = MELODY[index % MELODY.length]
@@ -36,8 +38,12 @@ export default function MusicPlayer() {
     g.connect(gainRef.current)
     osc.start()
     osc.stop(ctx.currentTime + dur)
-    timeoutRef.current = setTimeout(() => playNote(index + 1), dur * 1000)
+    timeoutRef.current = setTimeout(() => playNoteRef.current(index + 1), dur * 1000)
   }, [])
+
+  useEffect(() => {
+    playNoteRef.current = playNote
+  }, [playNote])
 
   const start = useCallback(() => {
     initAudio()

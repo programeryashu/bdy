@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { StoreProvider, useStore } from './store'
+import { StoreProvider } from './store'
+import { useStore } from './useStore'
 import Background from './components/Background'
 import MusicPlayer from './components/MusicPlayer'
 import AdminPanel from './components/AdminPanel'
@@ -31,8 +32,8 @@ function BirthdayApp() {
   useEffect(() => {
     // Apply theme on mount/config change
     document.body.className = config.theme ? `theme-${config.theme}` : ''
-    // Handle scrolling only on letter screen
-    if (currentScreen === 2) {
+    // Handle scrolling only on letter screen (index 3)
+    if (currentScreen === 3) {
       document.body.classList.add('allow-scroll')
     } else {
       document.body.classList.remove('allow-scroll')

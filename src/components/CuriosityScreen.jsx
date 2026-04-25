@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useStore } from '../store'
+import { useStore } from '../useStore'
 import { spawnConfetti } from './Effects'
 
 export default function CuriosityScreen({ onComplete }) {

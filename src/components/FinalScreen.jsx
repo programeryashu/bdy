@@ -1,12 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import confetti from 'canvas-confetti'
-import { useStore } from '../store'
+import { useStore } from '../useStore'
 import CatchGame from './CatchGame'
 
 export default function FinalScreen({ onRestart }) {
   const { config } = useStore()
-  const [showGallery, setShowGallery] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
   const [isUnlocked, setIsUnlocked] = useState(false)
 
@@ -47,15 +46,6 @@ export default function FinalScreen({ onRestart }) {
           <CatchGame onUnlock={handleUnlock} />
         </section>
 
-        {/* Photo Gallery Button */}
-        {config.photos && config.photos.length > 0 && (
-          <button 
-            className="w-full bg-white/10 border border-white/20 py-3 rounded-2xl hover:bg-white/20 transition-colors mb-4"
-            onClick={() => setShowGallery(true)}
-          >
-            📸 View Photo Gallery
-          </button>
-        )}
 
         {/* Final Surprise Section (Unlocked after game) */}
         <AnimatePresence>

@@ -1,19 +1,18 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useStore } from '../store'
+import { useStore } from '../useStore'
 
 export default function CatchGame({ onUnlock }) {
   const { config } = useStore()
   const [score, setScore] = useState(0)
   const [items, setItems] = useState([])
-  const [gameOver, setGameOver] = useState(false)
   const gameRef = useRef(null)
   const [basketX, setBasketX] = useState(50) // percentage
   const [isUnlocked, setIsUnlocked] = useState(false)
 
   // Spawn items
   useEffect(() => {
-    if (gameOver || isUnlocked) return
+    if (isUnlocked) return
     
     const interval = setInterval(() => {
       const id = Math.random().toString(36).substr(2, 9)
@@ -22,11 +21,11 @@ export default function CatchGame({ onUnlock }) {
     }, 800)
 
     return () => clearInterval(interval)
-  }, [gameOver, isUnlocked])
+  }, [isUnlocked])
 
   // Move items
   useEffect(() => {
-    if (gameOver || isUnlocked) return
+    if (isUnlocked) return
 
     const interval = setInterval(() => {
       setItems(prev => {
@@ -59,7 +58,7 @@ export default function CatchGame({ onUnlock }) {
     }, 50)
 
     return () => clearInterval(interval)
-  }, [basketX, gameOver, isUnlocked, onUnlock])
+  }, [basketX, isUnlocked, onUnlock])
 
   const handleMouseMove = (e) => {
     if (!gameRef.current) return
@@ -112,7 +111,7 @@ export default function CatchGame({ onUnlock }) {
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute inset-0 bg-rose-600/90 flex flex-center items-center justify-center p-6 text-center"
+          className="absolute inset-0 bg-rose-600/90 flex items-center justify-center p-6 text-center"
         >
           <div>
             <h3 className="text-2xl font-bold text-white mb-2">✨ SUCCESS! ✨</h3>
