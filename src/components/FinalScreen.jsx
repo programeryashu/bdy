@@ -8,6 +8,17 @@ export default function FinalScreen({ onRestart }) {
   const { config } = useStore()
   const [showGallery, setShowGallery] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
+  const [isUnlocked, setIsUnlocked] = useState(false)
+
+  const handleUnlock = () => {
+    setIsUnlocked(true)
+    confetti({ 
+      particleCount: 150, 
+      spread: 70, 
+      origin: { y: 0.6 },
+      colors: ['#ff6b9d', '#ffbb33', '#ffffff']
+    })
+  }
 
   return (
     <motion.div
@@ -33,7 +44,7 @@ export default function FinalScreen({ onRestart }) {
         {/* Mini Game Section */}
         <section className="space-y-4 mb-8">
           <h3 className="text-[var(--color-rose)] font-medium text-center">🎁 Mini-Game: Catch 20 Gifts!</h3>
-          <CatchGame onUnlock={() => confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } })} />
+          <CatchGame onUnlock={handleUnlock} />
         </section>
 
         {/* Photo Gallery Button */}
@@ -46,31 +57,39 @@ export default function FinalScreen({ onRestart }) {
           </button>
         )}
 
-        {/* Final Surprise Button */}
-        <div className="pt-6 border-t border-white/10 text-center mb-6">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-gradient-to-r from-rose-500 to-amber-500 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-rose-500/20"
-            onClick={() => setShowReveal(true)}
-          >
-            One More Surprise ✨
-          </motion.button>
-          
-          <AnimatePresence>
-            {showReveal && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-6 p-4 bg-white/5 rounded-2xl border border-white/10 text-[var(--color-blush)]"
+        {/* Final Surprise Section (Unlocked after game) */}
+        <AnimatePresence>
+          {isUnlocked && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="pt-6 border-t border-white/10 text-center mb-6 overflow-hidden"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-gradient-to-r from-rose-500 to-amber-500 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-rose-500/20"
+                onClick={() => setShowReveal(true)}
               >
-                <p className="text-xl font-medium animate-pulse">
-                  Check WhatsApp / Look behind you 😎
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                One More Surprise ✨
+              </motion.button>
+              
+              <AnimatePresence>
+                {showReveal && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-4 bg-white/5 rounded-2xl border border-white/10 text-[var(--color-blush)]"
+                  >
+                    <p className="text-xl font-medium animate-pulse">
+                      {config.secretMessage || "Check WhatsApp / Look behind you 😎"}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <button 
           className="w-full text-white/40 text-sm hover:text-white/60 transition-colors"
