@@ -24,7 +24,7 @@ const SCREENS = [
 
 function BirthdayApp() {
   const [currentScreen, setCurrentScreen] = useState(0)
-  const { config } = useStore()
+  const { config, isLoading } = useStore()
 
   useEffect(() => {
     // Apply theme on mount/config change
@@ -42,6 +42,16 @@ function BirthdayApp() {
   const restart = () => {
     setCurrentScreen(0)
     window.scrollTo(0, 0)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-[#0a0518] flex items-center justify-center z-[500]">
+        <div className="text-rose-500 animate-pulse text-xl font-light tracking-widest">
+          PREPARING SURPRISE...
+        </div>
+      </div>
+    )
   }
 
   return (

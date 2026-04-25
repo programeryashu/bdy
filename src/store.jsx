@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
+import { supabase } from './lib/supabase'
 
 const DEFAULTS = {
   name: 'Someone Special',
@@ -11,7 +12,7 @@ const DEFAULTS = {
   adminPw: '',
 }
 
-function loadState() {
+function loadLocalState() {
   try {
     const s = localStorage.getItem('bd-config')
     if (s) return { ...DEFAULTS, ...JSON.parse(s) }
@@ -19,16 +20,62 @@ function loadState() {
   return { ...DEFAULTS }
 }
 
-function saveState(state) {
+function saveLocalState(state) {
   try { localStorage.setItem('bd-config', JSON.stringify(state)) } catch (e) { /* ignore */ }
 }
 
 const StoreContext = createContext(null)
 
 export function StoreProvider({ children }) {
-  const [config, setConfig] = useState(loadState)
+  const [config, setConfig] = useState(loadLocalState)
+  const [isLoading, setIsLoading] = useState(true)
+  const isInitialized = useRef(false)
 
-  useEffect(() => { saveState(config) }, [config])
+  // 1. Fetch from Supabase on mount
+  useEffect(() => {
+    async function fetchRemote() {
+      try {
+        const { data, error } = await supabase
+          .from('birthday_config')
+          .select('data')
+          .eq('id', 'default')
+          .single()
+
+        if (data && data.data) {
+          setConfig(data.data)
+          saveLocalState(data.data)
+        } else if (error && error.code !== 'PGRST116') {
+          console.error('Supabase fetch error:', error)
+        }
+      } catch (err) {
+        console.error('Failed to connect to Supabase:', err)
+      } finally {
+        setIsLoading(false)
+        isInitialized.current = true
+      }
+    }
+
+    fetchRemote()
+  }, [])
+
+  // 2. Save to Supabase and LocalStorage when config changes
+  useEffect(() => {
+    if (!isInitialized.current) return
+
+    saveLocalState(config)
+
+    const timer = setTimeout(async () => {
+      try {
+        await supabase
+          .from('birthday_config')
+          .upsert({ id: 'default', data: config, updated_at: new Error().stack ? new Date().toISOString() : undefined })
+      } catch (err) {
+        console.error('Failed to save to Supabase:', err)
+      }
+    }, 1000) // Debounce 1s
+
+    return () => clearTimeout(timer)
+  }, [config])
 
   const update = useCallback((partial) => {
     setConfig(prev => ({ ...prev, ...partial }))
@@ -67,7 +114,7 @@ export function StoreProvider({ children }) {
   }, [])
 
   return (
-    <StoreContext.Provider value={{ config, update, reset, exportJSON, importJSON, DEFAULTS }}>
+    <StoreContext.Provider value={{ config, update, reset, exportJSON, importJSON, DEFAULTS, isLoading }}>
       {children}
     </StoreContext.Provider>
   )
