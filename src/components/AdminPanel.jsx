@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../useStore'
+import { supabase } from '../lib/supabase'
 
 export default function AdminPanel() {
   const { config, update, reset, exportJSON, importJSON } = useStore()
@@ -12,6 +13,8 @@ export default function AdminPanel() {
   // Local form state
   const [form, setForm] = useState(config)
   const [prevConfig, setPrevConfig] = useState(config)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef(null)
 
   // Sync form with store config when it changes
   useEffect(() => {
@@ -51,6 +54,44 @@ export default function AdminPanel() {
 
   const setTheme = (t) => {
     setForm(prev => ({ ...prev, theme: t }))
+  }
+
+  const handleFileUpload = async (e, photoIdx) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    try {
+      setIsUploading(true)
+      
+      // 1. Create a unique file name
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`
+      const filePath = `memories/${fileName}`
+
+      // 2. Upload to Supabase Storage (Assumes 'memories' bucket exists)
+      const { data, error } = await supabase.storage
+        .from('memories')
+        .upload(filePath, file)
+
+      if (error) throw error
+
+      // 3. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('memories')
+        .getPublicUrl(filePath)
+
+      // 4. Update form state
+      const newPhotos = [...form.photos]
+      newPhotos[photoIdx].url = publicUrl
+      setForm(prev => ({ ...prev, photos: newPhotos }))
+      
+      alert('Photo uploaded successfully! ✨')
+    } catch (err) {
+      console.error('Upload error:', err)
+      alert('Upload failed. Please ensure you have a "memories" bucket created in Supabase Storage and it is set to Public.')
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   return (
@@ -300,24 +341,36 @@ export default function AdminPanel() {
                         <div key={idx} className="bg-white/5 p-3 rounded-xl border border-white/10 space-y-2">
                           <div className="flex gap-2">
                             <input 
-                              className="flex-1 bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[var(--color-rose)]"
+                              className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[var(--color-rose)]"
                               value={photo.url}
                               onChange={e => {
                                 const newPhotos = [...form.photos]
                                 newPhotos[idx].url = e.target.value
                                 setForm(prev => ({ ...prev, photos: newPhotos }))
                               }}
-                              placeholder="Image URL..."
+                              placeholder="Image URL or upload..."
                             />
-                            <button 
-                              className="text-red-400 hover:text-red-300 px-1"
-                              onClick={() => {
-                                const newPhotos = form.photos.filter((_, i) => i !== idx)
-                                setForm(prev => ({ ...prev, photos: newPhotos }))
-                              }}
-                            >
-                              ✕
-                            </button>
+                            <div className="flex gap-1">
+                              <label className="cursor-pointer bg-white/10 hover:bg-white/20 p-2 rounded-lg flex items-center justify-center min-w-[32px] transition-colors">
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  accept="image/*"
+                                  disabled={isUploading}
+                                  onChange={(e) => handleFileUpload(e, idx)}
+                                />
+                                {isUploading ? '⏳' : '📁'}
+                              </label>
+                              <button 
+                                className="text-red-400 hover:text-red-300 bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-colors"
+                                onClick={() => {
+                                  const newPhotos = form.photos.filter((_, i) => i !== idx)
+                                  setForm(prev => ({ ...prev, photos: newPhotos }))
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
                           </div>
                           <input 
                             className="w-full bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[var(--color-rose)]"
